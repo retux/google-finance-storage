@@ -17,6 +17,8 @@ import json
 import time
 import sqlite3
 import re
+from pprint import pprint
+
 
 class Quote:
 	def __init__ (self, googleID = None, symbol = None, last = None, diference = None, vpercentual = None, previous = None, lasttime = None, exchange = None, \
@@ -48,6 +50,13 @@ class GoogleFinanceAPI:
 		# supongo que debe haber algun otro metodo mas pulenta.
 		self.JSONObject = json.loads(content[3:] )
 		return True
+
+	def getJsonFromFile(self):
+		# // This method is for testing, it loads json info from local file jsontest.json
+		with open('jsontest.json') as data_file:    
+			self.JSONObject = json.load(data_file)
+			#pprint(self.JSONObject)
+			return True
 
 	def Quotes2Stdout(self):
 		# // Method just for a little json debugging
@@ -137,15 +146,16 @@ class GoogleFinanceAPI:
 									 ( myQuote.Date, myQuote.Symbol, myQuote.Exchange))
 					row = cursor.fetchone()
 
-					if row == None:
+					if (row == None) and (Today == myQuote.Date):
 						# // entry doesn't exist so, do the INSERT 
+						print 'Debug: Do the INSERT for ' + myQuote.Symbol
 						cursor.execute('''INSERT INTO ''' + TableName + ''' (date, symbol, opening, high, low, close, exchange) \
 						VALUES(?,?,?,?,?,?,?)''', (myQuote.Date, myQuote.Symbol, myQuote.Last, myQuote.Last, myQuote.Last, myQuote.Last, \
 						myQuote.Exchange ))
 						db.commit()
 					else:
 						# // entry exists, do the update
-						if float(myQuote.Last) > float(row['high']):
+						if float(myQuote.Last) > float(row['high']) and (Today==myQuote.Date):
 							cursor.execute('''UPDATE ''' + TableName + '''
 							SET high=?, close=?
 							WHERE date=? AND symbol=? AND exchange=? ''', \
@@ -153,7 +163,7 @@ class GoogleFinanceAPI:
 							db.commit()
 							print 'Debug ' + myQuote.Symbol + ' updated high.'
 						else:
-							if float(myQuote.Last) < float(row['low']):
+							if float(myQuote.Last) < float(row['low']) and (Today==myQuote.Date):
 								cursor.execute('''UPDATE ''' + TableName + '''
 								SET low=?, close=?
 								WHERE date=? AND symbol=? AND exchange=? ''', \
@@ -161,7 +171,7 @@ class GoogleFinanceAPI:
 								db.commit()
 								print 'Debug ' + myQuote.Symbol + ' updated low.'
 							else:
-								if float(myQuote.Last) != float(row['close']):
+								if float(myQuote.Last) != float(row['close']) and (Today==myQuote.Date):
 									cursor.execute('''UPDATE ''' + TableName + '''
 									SET close=?
 									WHERE date=? AND symbol=? AND exchange=? ''', \
@@ -201,8 +211,10 @@ def main():
 		o += 1
 
 	JSp = GoogleFinanceAPI()
+
+	#if JSp.getJsonFromFile():	# // gets data from test file, just for debbugging.
 	if JSp.get(strSymbols):
-		#JSp.Quotes2Stdout()	# Show a little data, just for testing
+		#JSp.Quotes2Stdout()	# // Show a little data, just for testing
 		JSp.JsonQot2Obj()
 		JSp.DumpSnap2Sqlite()
 		JSp.UpdateDaySqlite()
