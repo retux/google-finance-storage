@@ -19,7 +19,8 @@ import sqlite3
 import re
 
 class Quote:
-	def __init__ (self, googleID = None, symbol = None, last = None, diference = None, vpercentual = None, previous = None, lasttime = None, exchange = None, timestp = None):
+	def __init__ (self, googleID = None, symbol = None, last = None, diference = None, vpercentual = None, previous = None, lasttime = None, exchange = None, \
+			timestp = None, datejson = None):
 		self.GoogleID = googleID
 		self.Symbol = symbol
 		self.Last = last
@@ -29,6 +30,7 @@ class Quote:
 		self.LastTime = lasttime
 		self.Exchange = exchange
 		self.Timestamp = timestp
+		self.Date = datejson
 
 class GoogleFinanceAPI:
 	def __init__(self):
@@ -53,14 +55,18 @@ class GoogleFinanceAPI:
 			return
 		for quote in self.JSONObject:
 			print "id=%s, symbol=%s, last=%s, dif=%s, vporc=%s, prev=%s, horaLast=%s, exch=%s" % ( quote['id'], quote['t'], quote['l'], \
-				quote['c'], quote['cp'], quote['pcls_fix'], quote['ltt'], quote['e'] )
+				quote['c'], quote['cp'], quote['pcls_fix'], quote['ltt'], quote['e'], quote['lt_dts'] )
 
 	def JsonQot2Obj (self):
 		if self.JSONObject == None:
 			return
 		for jquote in self.JSONObject:
+			proviDate2 = None
+			proviDate = jquote['lt_dts'].split("T")
+			if len(proviDate) == 2:
+				proviDate2 = re.sub("T", "", proviDate[0])
 			mylitQuote = Quote(jquote['id'], jquote['t'], jquote['l'], jquote['c'], jquote['cp'],\
-					 jquote['pcls_fix'], jquote['ltt'], jquote['e'], int(time.time()) )
+					 jquote['pcls_fix'], jquote['ltt'], jquote['e'], int(time.time()), proviDate2 )
 			self.QuotesList.append(mylitQuote)
 			mylitQuote = None		# // delete object.
 		# print "Debug QuotesList.length=" + str(len(self.QuotesList))	
@@ -128,13 +134,13 @@ class GoogleFinanceAPI:
 				# explore list of quotes
 				for myQuote in self.QuotesList:
 					cursor.execute('''SELECT * FROM ''' + TableName + ''' WHERE date=? AND symbol=? AND exchange=? ''',\
-									 ( Today, myQuote.Symbol, myQuote.Exchange))
+									 ( myQuote.Date, myQuote.Symbol, myQuote.Exchange))
 					row = cursor.fetchone()
 
 					if row == None:
 						# // entry doesn't exist so, do the INSERT 
 						cursor.execute('''INSERT INTO ''' + TableName + ''' (date, symbol, opening, high, low, close, exchange) \
-						VALUES(?,?,?,?,?,?,?)''', (Today, myQuote.Symbol, myQuote.Last, myQuote.Last, myQuote.Last, myQuote.Last, \
+						VALUES(?,?,?,?,?,?,?)''', (myQuote.Date, myQuote.Symbol, myQuote.Last, myQuote.Last, myQuote.Last, myQuote.Last, \
 						myQuote.Exchange ))
 						db.commit()
 					else:
@@ -143,7 +149,7 @@ class GoogleFinanceAPI:
 							cursor.execute('''UPDATE ''' + TableName + '''
 							SET high=?, close=?
 							WHERE date=? AND symbol=? AND exchange=? ''', \
-							(myQuote.Last, myQuote.Last, Today, myQuote.Symbol, myQuote.Exchange) )
+							(myQuote.Last, myQuote.Last, myQuote.Date, myQuote.Symbol, myQuote.Exchange) )
 							db.commit()
 							print 'Debug ' + myQuote.Symbol + ' updated high.'
 						else:
@@ -151,7 +157,7 @@ class GoogleFinanceAPI:
 								cursor.execute('''UPDATE ''' + TableName + '''
 								SET low=?, close=?
 								WHERE date=? AND symbol=? AND exchange=? ''', \
-								(myQuote.Last, myQuote.Last, Today, myQuote.Symbol, myQuote.Exchange) )
+								(myQuote.Last, myQuote.Last, myQuote.Date, myQuote.Symbol, myQuote.Exchange) )
 								db.commit()
 								print 'Debug ' + myQuote.Symbol + ' updated low.'
 							else:
@@ -159,7 +165,7 @@ class GoogleFinanceAPI:
 									cursor.execute('''UPDATE ''' + TableName + '''
 									SET close=?
 									WHERE date=? AND symbol=? AND exchange=? ''', \
-									(myQuote.Last, Today, myQuote.Symbol, myQuote.Exchange) )
+									(myQuote.Last, myQuote.Date, myQuote.Symbol, myQuote.Exchange) )
 									db.commit()
 									print 'Debug ' + myQuote.Symbol + ' updated last only.'
 								else:
