@@ -16,6 +16,7 @@ import urllib2
 import json
 import time
 import sqlite3
+import re
 
 class Quote:
 	def __init__ (self, googleID = None, symbol = None, last = None, diference = None, vpercentual = None, previous = None, lasttime = None, exchange = None, timestp = None):
@@ -47,7 +48,7 @@ class GoogleFinanceAPI:
 		return True
 
 	def Quotes2Stdout(self):
-		# // Metodo solo para algun debug del json
+		# // Method just for a little json debugging
 		if self.JSONObject == None:
 			return
 		for quote in self.JSONObject:
@@ -92,15 +93,82 @@ class GoogleFinanceAPI:
 						VALUES(?,?,?,?,?,?,?,?,?)''', (myQuote.GoogleID, myQuote.Symbol, myQuote.Last, myQuote.Diference, myQuote.vPercentual, \
 						myQuote.Previous, myQuote.LastTime, myQuote.Exchange, myQuote.Timestamp ))
 						db.commit()
-			except sqlite3.IntegrityError:
-				# // Do the update
-				print('Record already exists')
-
-		except Exception as Error:
-			print "SQLite Error: " + str(Error)
+			except Exception as Error:
+				print "SQLite Error: " + str(Error)
 		finally:
 			db.close()
 
+
+	def UpdateDaySqlite (self):
+		# // updates Dayly db for technical analysis and other uses.
+		# // history dayly dataset, stored in Day_MMYYYY tables.
+		# // each day there must be an entry in table for each symbol.
+		Myyyy = time.strftime('%m%Y')
+		TableName = 'Day_' + Myyyy
+		Today = time.strftime('%Y-%m-%d')
+		table_name_validator = re.compile(r'^[0-9a-zA-Z_\$]+$')
+		if not table_name_validator.match(TableName):
+			print 'Error: someone is trying some sql injection?'
+			return
+
+		try:
+			db = sqlite3.connect(self.SqlLiteFile)
+			db.row_factory = sqlite3.Row
+			cursor = db.cursor()
+			cursor.execute('''CREATE TABLE IF NOT EXISTS
+				''' + TableName + '''(date TEXT,
+				symbol TEXT,
+				opening REAL,
+				high REAL,
+				low REAL,
+				close REAL,
+				exchange TEXT, PRIMARY KEY(date, symbol, exchange) );''') 
+			db.commit()
+			try:
+				# explore list of quotes
+				for myQuote in self.QuotesList:
+					cursor.execute('''SELECT * FROM ''' + TableName + ''' WHERE date=? AND symbol=? AND exchange=? ''',\
+									 ( Today, myQuote.Symbol, myQuote.Exchange))
+					row = cursor.fetchone()
+
+					if row == None:
+						# // entry doesn't exist so, do the INSERT 
+						cursor.execute('''INSERT INTO ''' + TableName + ''' (date, symbol, opening, high, low, close, exchange) \
+						VALUES(?,?,?,?,?,?,?)''', (Today, myQuote.Symbol, myQuote.Last, myQuote.Last, myQuote.Last, myQuote.Last, \
+						myQuote.Exchange ))
+						db.commit()
+					else:
+						# // entry exists, do the update
+						if float(myQuote.Last) > float(row['high']):
+							cursor.execute('''UPDATE ''' + TableName + '''
+							SET high=?, close=?
+							WHERE date=? AND symbol=? AND exchange=? ''', \
+							(myQuote.Last, myQuote.Last, Today, myQuote.Symbol, myQuote.Exchange) )
+							db.commit()
+							print 'Debug ' + myQuote.Symbol + ' updated high.'
+						else:
+							if float(myQuote.Last) < float(row['low']):
+								cursor.execute('''UPDATE ''' + TableName + '''
+								SET low=?, close=?
+								WHERE date=? AND symbol=? AND exchange=? ''', \
+								(myQuote.Last, myQuote.Last, Today, myQuote.Symbol, myQuote.Exchange) )
+								db.commit()
+								print 'Debug ' + myQuote.Symbol + ' updated low.'
+							else:
+								if float(myQuote.Last) != float(row['close']):
+									cursor.execute('''UPDATE ''' + TableName + '''
+									SET close=?
+									WHERE date=? AND symbol=? AND exchange=? ''', \
+									(myQuote.Last, Today, myQuote.Symbol, myQuote.Exchange) )
+									db.commit()
+									print 'Debug ' + myQuote.Symbol + ' updated last only.'
+								else:
+									print 'Debug ' + myQuote.Symbol + ' no changes.'
+
+			except Exception as Error:
+				print "SQLite Error: " + str(Error)
+		finally:
+			db.close()
 
 
 
@@ -131,6 +199,7 @@ def main():
 		#JSp.Quotes2Stdout()	# Show a little data, just for testing
 		JSp.JsonQot2Obj()
 		JSp.DumpSnap2Sqlite()
+		JSp.UpdateDaySqlite()
 
 
 if __name__ == "__main__":
