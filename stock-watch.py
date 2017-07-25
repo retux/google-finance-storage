@@ -54,8 +54,8 @@ class GoogleFinanceAPI:
 	def getJsonFromFile(self):
 		# // This method is for testing, it loads json info from local file jsontest.json
 		with open('jsontest.json') as data_file:    
-			self.JSONObject = json.load(data_file)
 			#pprint(self.JSONObject)
+			self.JSONObject = json.load(data_file)
 			return True
 
 	def Quotes2Stdout(self):
@@ -198,7 +198,7 @@ def main():
 		 [ 'NASDAQ:GOOG', 'NASDAQ:CSCO', 'NYSE:IBM', 'BCBA:YPFD' ]
 	"""
 
-	Symbols = [ 'NASDAQ:GOOG', 'NASDAQ:CSCO', 'NASDAQ:BABA', 'NASDAQ:APPL', 'NYSE:IBM', 'BCBA:YPFD' ]
+	Symbols = [ 'NASDAQ:GOOG', 'NASDAQ:CSCO', 'NASDAQ:BABA', 'NASDAQ:APPL', 'NYSE:IBM', 'BCBA:YPFD' , 'NYSE:GLOB' ]
 	#Symbols = [ 'NASDAQ:GOOG' ]
 
 	strSymbols = ' ' 
