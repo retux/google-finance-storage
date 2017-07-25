@@ -34,8 +34,6 @@ class QuoteCollector(object):
         JSp.Quotes2Stdout()	# // Show a little data, just for testing
         JSp.JsonQot2Obj()
         for quote in JSp.QuotesList:
-            print("[debug] symbol: {0}, last: {1}".format(quote.Symbol, quote.Last))
-    
             # Convert quotes to metric
             metric = Metric('{0}_last_price'.format(quote.Symbol), 'Last price for {0} stock'.format(quote.Symbol), 'summary')
             metric.add_sample('{0}_last_price'.format(quote.Symbol), value=float(quote.Last), labels={})
