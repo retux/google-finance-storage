@@ -31,13 +31,13 @@ class QuoteCollector(object):
     JSp = GoogleFinanceAPI()
    
     if JSp.get(strSymbols):
-        JSp.Quotes2Stdout()	# // Show a little data, just for testing
+        #JSp.Quotes2Stdout()	# // Show a little data, just for testing
         JSp.JsonQot2Obj()
+        metric = Metric('stock_quotes', 'stock quotes last price', 'gauge')
         for quote in JSp.QuotesList:
             # Convert quotes to metric
-            metric = Metric('{0}_last_price'.format(quote.Symbol), 'Last price for {0} stock'.format(quote.Symbol), 'summary')
-            metric.add_sample('{0}_last_price'.format(quote.Symbol), value=float(quote.Last), labels={})
-            yield metric	
+            metric.add_sample('stock_quotes', value=float(quote.Last), labels={'symbol': quote.Symbol})
+        yield metric	
 
 def main():
 
