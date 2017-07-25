@@ -21,12 +21,9 @@ def cat_to_string (Symbols):
 
 
 class QuoteCollector(object):
-  def __init__(self, endpoint):
+  def __init__(self):
     self._endpoint = ''
   def collect(self):
-    # Fetch the quotes
-    #response = json.loads(requests.get(self._endpoint).content.decode('UTF-8'))
-
     Symbols = [ 'NASDAQ:GOOG', 'NASDAQ:CSCO', 'NASDAQ:BABA', 'NASDAQ:APPL', 'NYSE:IBM', 'NYSE:GLOB' ]
     #Symbols = [ 'NASDAQ:GOOG' ]
 
@@ -36,7 +33,6 @@ class QuoteCollector(object):
     if JSp.get(strSymbols):
         JSp.Quotes2Stdout()	# // Show a little data, just for testing
         JSp.JsonQot2Obj()
-        #print("[debug] Quotes list length: {0}".format(JSp.getQuotesListLength())) 	
         for quote in JSp.QuotesList:
             print("[debug] symbol: {0}, last: {1}".format(quote.Symbol, quote.Last))
     
@@ -54,7 +50,7 @@ def main():
          [ 'NASDAQ:GOOG', 'NASDAQ:CSCO', 'NYSE:IBM', 'BCBA:YPFD' ]
     """
     start_http_server(int(sys.argv[1]))
-    REGISTRY.register(QuoteCollector('blah'))
+    REGISTRY.register(QuoteCollector())
     while True: time.sleep(1)
 		
 
