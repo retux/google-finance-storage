@@ -41,7 +41,9 @@ class GoogleFinanceAPI:
 		self.JSONObject = None
 		self.QuotesList = []
 		self.SqlLiteFile = './google_quotes.sqlite3'
-		
+
+	def getQuotesListLength(self):
+		return len(self.QuotesList)	
 
 	def get(self,ExchangeSymbols):
 		url = self.prefix+"%s"%(ExchangeSymbols)
@@ -64,8 +66,10 @@ class GoogleFinanceAPI:
 		if self.JSONObject == None:
 			return
 		for quote in self.JSONObject:
-			print "id=%s, symbol=%s, last=%s, dif=%s, vporc=%s, prev=%s, horaLast=%s, exch=%s" % ( quote['id'], quote['t'], quote['l'], \
-				quote['c'], quote['cp'], quote['pcls_fix'], quote['ltt'], quote['e'], quote['lt_dts'] )
+			#print "id=%s, symbol=%s, last=%s, dif=%s, vporc=%s, prev=%s, horaLast=%s, exch=%s" % ( quote['id'], quote['t'], quote['l'], \
+			#	quote['c'], quote['cp'], quote['pcls_fix'], quote['ltt'], quote['e'], quote['lt_dts'] )
+			print ( "id={0}, symbol={1}, last={2}, dif={3}, vporc={4}, prev={5}, horaLast={6}, exch={7}, other={8}".format(quote['id'], quote['t'] \
+			, quote['l'], quote['c'], quote['cp'], quote['pcls_fix'], quote['ltt'], quote['e'], quote['lt_dts']) ) 
 
 	def JsonQot2Obj (self):
 		if self.JSONObject == None:
