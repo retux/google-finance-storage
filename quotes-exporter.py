@@ -24,8 +24,8 @@ class QuoteCollector(object):
   def __init__(self):
     self._endpoint = ''
   def collect(self):
-    Symbols = [ 'NASDAQ:GOOG', 'NASDAQ:CSCO', 'NASDAQ:BABA', 'NASDAQ:APPL', 'NYSE:IBM', 'NYSE:GLOB' ]
-    #Symbols = [ 'NASDAQ:GOOG' ]
+    Symbols = [ 'GOOG', 'CSCO', 'BABA', 'APPL', 'IBM', 'GLOB' ]
+    #Symbols = [ 'GOOG' ]
 
     strSymbols = cat_to_string(Symbols)
     JSp = GoogleFinanceAPI()

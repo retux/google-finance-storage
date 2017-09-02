@@ -7,12 +7,14 @@ def main():
 	"""
 	Symbols list contain a list of pairs which describes stock symbols as used by Google API.
 	Each element should be 'EXCHANGE:SYMBOL' examples:
+        As from 2017 0901 API seems to have been updated, symbols do not require stock exchange
+        name as prefix, as follows:
 	
-		 [ 'NASDAQ:GOOG', 'NASDAQ:CSCO', 'NYSE:IBM', 'BCBA:YPFD' ]
+		 [ 'GOOG', 'CSCO', 'IBM', 'YPFD' ]
 	"""
 
-	Symbols = [ 'NASDAQ:GOOG', 'NASDAQ:CSCO', 'NASDAQ:BABA', 'NASDAQ:APPL', 'NYSE:IBM', 'BCBA:YPFD' , 'NYSE:GLOB' ]
-	#Symbols = [ 'NASDAQ:GOOG' ]
+	Symbols = [ 'GOOG', 'CSCO', 'BABA', 'APPL', 'IBM', 'YPFD' , 'GLOB' ]
+	#Symbols = [ 'GOOG' ]
 
 	strSymbols = ' ' 
 	o = 0
